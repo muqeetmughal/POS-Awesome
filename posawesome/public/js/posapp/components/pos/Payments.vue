@@ -627,7 +627,7 @@
 
     <v-card flat class="cards mb-0 mt-3 py-0">
       <v-row align="start" no-gutters>
-        <v-col cols="6">
+        <v-col cols="4">
           <v-btn
             block
             large
@@ -638,7 +638,7 @@
             >{{ __("Submit") }}</v-btn
           >
         </v-col>
-        <v-col cols="6" class="pl-1">
+        <v-col cols="4" class="pl-1">
           <v-btn
             block
             large
@@ -648,6 +648,28 @@
             :disabled="vaildatPayment"
             >{{ __("Submit & Print") }}</v-btn
           >
+        </v-col>
+        <v-col cols="4" class="pl-1">
+          <v-btn
+            block
+            large
+            color="info"
+            dark
+            @click="submitWithSlipy"
+          >
+            {{ __("Go Slipy") }}
+          </v-btn>
+        </v-col>
+        <v-col cols="12" v-if="is_slipy_enabled">
+          <v-btn
+            block
+            large
+            color="info"
+            dark
+            @click="submitWithSlipy"
+          >
+            {{ __("Go Slipy") }}
+          </v-btn>
         </v-col>
         <v-col cols="12">
           <v-btn
@@ -734,6 +756,14 @@ export default {
     back_to_invoice() {
       evntBus.$emit("show_payment", "false");
       evntBus.$emit("set_customer_readonly", false);
+    },
+    submitWithSlipy() {
+      this.submit(undefined, false, false);
+      // evntBus.$emit("go_slipy");
+      evntBus.$emit("show_mesage", {
+                text: 'We go green with slipy',
+                color: "success",
+              });
     },
     submit(event, payment_received = false, print = false) {
       if (!this.invoice_doc.is_return && this.total_payments < 0) {
@@ -845,6 +875,7 @@ export default {
         frappe.utils.play_sound("error");
         return;
       }
+
 
       this.submit_invoice(print);
       this.customer_credit_dict = [];
