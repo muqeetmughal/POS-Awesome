@@ -649,6 +649,18 @@
             >{{ __("Submit & Print") }}</v-btn
           >
         </v-col>
+        <v-col cols="12" v-if="is_slipy_enabled">
+          <v-btn
+            block
+            large
+            class="mt-2 pa-1"
+            color="info"
+            dark
+            @click="submitWithSlipy"
+          >
+            {{ __("Go Slipy") }}
+          </v-btn>
+        </v-col>
         <v-col cols="12">
           <v-btn
             block
@@ -705,6 +717,8 @@ import format from "../../format";
 export default {
   mixins: [format],
   data: () => ({
+    is_slipy_enabled: true,
+    submitted_with_slipy : false,
     loading: false,
     pos_profile: "",
     invoice_doc: "",
@@ -734,6 +748,13 @@ export default {
     back_to_invoice() {
       evntBus.$emit("show_payment", "false");
       evntBus.$emit("set_customer_readonly", false);
+    },
+    submitWithSlipy() {
+      console.log("Check",this.submitted_with_slipy)
+      this.submitted_with_slipy = true;
+      console.log("Check 2",this.submitted_with_slipy)
+      this.submit();
+      // this.submitted_with_slipy = false;
     },
     submit(event, payment_received = false, print = false) {
       if (!this.invoice_doc.is_return && this.total_payments < 0) {
@@ -846,6 +867,7 @@ export default {
         return;
       }
 
+
       this.submit_invoice(print);
       this.customer_credit_dict = [];
       this.redeem_customer_credit = false;
@@ -892,12 +914,19 @@ export default {
             if (print) {
               vm.load_print_page();
             }
-            evntBus.$emit("set_last_invoice", vm.invoice_doc.name);
+            evntBus.$emit("set_last_invoice", vm.invoice_doc.name);      
             evntBus.$emit("show_mesage", {
               text: `Invoice ${r.message.name} is Submited`,
               color: "success",
             });
             frappe.utils.play_sound("submit");
+            if (vm.submitted_with_slipy){
+              vm.create_slipy_invoice(vm.invoice_doc.name, '03096699016')
+              evntBus.$emit("show_mesage", {
+                text: 'We go green with slipy',
+                color: "success",
+              });
+            }
             this.addresses = [];
           }
         },
@@ -1245,6 +1274,18 @@ export default {
       this.clear_all_amounts();
       this.customer_credit_dict.push(advance);
     },
+    create_slipy_invoice(invoice_name, shoping_id_or_phone){
+      console.log("Calling slipy invoiec request")
+      this.submitted_with_slipy = false;
+      frappe.call({
+        method: "slipy.slipy.api.slipy.create_slipy_invoice",
+        args: {
+          invoice_name: invoice_name,
+          shoping_id_or_phone:shoping_id_or_phone ,
+        },
+        async: true
+      });
+    }
   },
 
   computed: {
